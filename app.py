@@ -1,5 +1,6 @@
 # MNIST 손글씨 분류기 — 학생용 핵심 스캐폴딩
 # 실행: python3.11 -m streamlit run app.py
+from io import BytesIO
 from pathlib import Path
 
 import numpy as np
@@ -11,6 +12,7 @@ from PIL import Image, ImageOps
 
 APP_DIR = Path(__file__).resolve().parent
 MODEL_PATH = APP_DIR / "mnist_cnn.pt"
+DEMO_IMAGE_PATH = APP_DIR / "demo" / "demo_digit_7.png"
 MY_NAME = "이름을 입력하세요"
 
 
@@ -205,6 +207,29 @@ def main():
             source = st.file_uploader("PNG 또는 JPG", type=["png", "jpg", "jpeg"])
         else:
             source = st.camera_input("종이의 숫자를 크게 촬영하세요")
+
+        demo_col1, demo_col2 = st.columns(2)
+        with demo_col1:
+            demo_clicked = st.button(
+                "샘플 숫자 7로 바로 실행",
+                icon=":material/play_arrow:",
+                width="stretch",
+            )
+        with demo_col2:
+            st.download_button(
+                "샘플 PNG 내려받기",
+                data=DEMO_IMAGE_PATH.read_bytes(),
+                file_name=DEMO_IMAGE_PATH.name,
+                mime="image/png",
+                icon=":material/download:",
+                on_click="ignore",
+                width="stretch",
+            )
+        st.caption("샘플 이미지의 정답은 숫자 7입니다. 전처리 화면과 모델 예측 확률을 함께 확인하세요.")
+
+        if demo_clicked:
+            source = BytesIO(DEMO_IMAGE_PATH.read_bytes())
+            source.name = DEMO_IMAGE_PATH.name
 
         if source is None:
             st.info("숫자 한 개가 크게 보이는 이미지를 준비하세요. 흰 배경·검은 글씨도 자동으로 반전합니다.")
