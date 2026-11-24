@@ -1,5 +1,6 @@
 # MNIST 손글씨 분류기 — 학생용 핵심 스캐폴딩
 # 실행: python3.11 -m streamlit run app.py
+# Streamlit Community Cloud 배포 진입점
 from io import BytesIO
 from pathlib import Path
 
