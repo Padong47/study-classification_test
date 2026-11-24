@@ -1,6 +1,6 @@
 # MNIST 손글씨 분류기 — 학생용 핵심 스캐폴딩
 # 실행: python3.11 -m streamlit run app.py
-# Streamlit Community Cloud 배포 진입점
+import base64
 from io import BytesIO
 from pathlib import Path
 
@@ -107,6 +107,25 @@ def preprocess_image(image: Image.Image) -> tuple[torch.Tensor, np.ndarray]:
     # 첫 번째 1은 배치, 두 번째 1은 흑백 채널입니다.
     tensor = torch.tensor(canvas, dtype=torch.float32).reshape(1, 1, 28, 28) / 255.0
     return tensor, canvas
+
+
+def render_inline_image(image: Image.Image | np.ndarray, caption: str) -> None:
+    """Streamlit Cloud의 미디어 경로와 무관하게 PNG 미리보기를 표시합니다."""
+    preview_image = Image.fromarray(image) if isinstance(image, np.ndarray) else image.copy()
+    preview_image.thumbnail((520, 520), Image.Resampling.LANCZOS)
+    buffer = BytesIO()
+    preview_image.save(buffer, format="PNG")
+    encoded = base64.b64encode(buffer.getvalue()).decode("ascii")
+    st.markdown(
+        f"""
+        <figure style="margin:0; text-align:center;">
+          <img src="data:image/png;base64,{encoded}" alt="{caption}"
+               style="display:block; width:100%; max-height:320px; object-fit:contain; border-radius:10px;" />
+          <figcaption style="margin-top:.45rem; color:#65778a; font-size:.86rem;">{caption}</figcaption>
+        </figure>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def predict_probabilities(model: nn.Module, x: torch.Tensor) -> np.ndarray:
@@ -247,8 +266,10 @@ def main():
                 st.stop()
 
             before, after = st.columns(2)
-            before.image(image, caption="원본", width="stretch")
-            after.image(preview, caption="모델 입력 28×28", clamp=True, width="stretch")
+            with before:
+                render_inline_image(image, "원본")
+            with after:
+                render_inline_image(preview, "모델 입력 28×28")
 
     with result_col:
         st.subheader("02 · 모델의 판단")
